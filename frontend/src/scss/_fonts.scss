@@ -1,0 +1,19 @@
+@mixin font($font-family, $font-file) {
+    @font-face {
+        font-family: $font-family;
+        font-weight: normal;
+        font-style: normal;
+        src: url($font-file)
+    }
+}
+
+@include font('Roboto', '../assets/fonts/Roboto-Medium.ttf');
+@include font('NotoSansJP', '../assets/fonts/NotoSansJP-Regular.otf');
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Roboto', sans-serif;
+}
+
+p {
+    font-family: 'NotoSansJP', sans-serif;
+}

@@ -1,0 +1,71 @@
+version: '2.3'
+services:
+    prototype_frontend:
+        image: prototype_frontend
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+            args: 
+                - REACT_APP_API_SERVER=http://localhost:5000
+        restart: always
+        ports:
+            - "3000:80"
+        networks:
+            - prototype_network
+        depends_on: 
+            - prototype_backend
+    prototype_backend:
+        image: prototype_backend
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_HOST=prototype_db
+            - POSTGRES_PORT=5432
+            - POSTGRES_DB=prototype_db
+        command: bash -c 'while !</dev/tcp/prototype_db/5432; do sleep 1; done; bash run.sh'
+        restart: always
+        ports:
+            - "5000:5000"
+        networks:
+            - prototype_network
+        depends_on: 
+            - prototype_db
+    prototype_db:
+        image: postgres
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_HOST=prototype_db
+            - POSTGRES_PORT=5432
+            - POSTGRES_DB=prototype_db
+            - PGDATA=/var/lib/postgresql/data/pgdata
+        volumes:
+            - ${DATABASE_DIR}:/var/lib/postgresql/data/pgdata
+        restart: always
+        ports:
+            - "5432:5432"
+        networks:
+            - prototype_network
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U admin -d prototype_db"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+    prototype_db_viewer:
+        image: dpage/pgadmin4
+        environment:
+            - PGADMIN_DEFAULT_EMAIL=${PGADMIN_USER}
+            - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+            - PGADMIN_LISTEN_PORT=5555
+        restart: always
+        ports:
+            - "5555:5555"
+        networks:
+            - prototype_network
+        depends_on:
+            - prototype_db
+networks:
+    prototype_network:
